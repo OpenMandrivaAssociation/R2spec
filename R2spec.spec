@@ -1,6 +1,6 @@
 Name:           R2spec
 Version:        4.1.0
-Release:        1
+Release:        2
 Summary:        Python script to generate R spec file
 
 Group:          Development/Other
