@@ -1,0 +1,109 @@
+--- R2spec-4.1.0/r2spec/rpackage.py.orig	2012-02-16 05:31:28.403533398 -0200
++++ R2spec-4.1.0/r2spec/rpackage.py	2012-02-16 05:32:04.099685181 -0200
+@@ -125,7 +125,9 @@ class RPackage(object):
+ 
+         url = self.source0.rsplit('/', 1)[0]
+         url = '{url}/{source}'.format(url=url, source=self.source)
++        url = url.replace('%{packname}', self.name)
+         self.log.info('Downloading %s' % url)
++        self.check_version()
+ 
+         remotefile = urllib2.urlopen(url)
+         localfile = open(sources, 'w')
+@@ -232,10 +234,7 @@ class RPackage(object):
+         self.down_version = version.replace('-', '.')
+         self.url = self.config.get(repo, 'url')
+         self.source0 = self.config.get(repo, 'source')
+-        if self.up_version != self.down_version:
+-            self.source0 = self.source0.replace('%{version}', self.up_version)
+-        self.source = '{name}_{version}.tar.gz'.format(name=self.name,
+-            version=self.up_version)
++        self.check_version()
+ 
+     def set_repo(self, reponame):
+         """ This function find the URL and Source0 tag for the spec file
+@@ -248,3 +247,9 @@ class RPackage(object):
+                 self.url = self.config.get(section, 'url'.format(name=self.name))
+                 self.source0 = self.config.get(section, 'source')
+                 break
++
++    def check_version(self):
++        if self.up_version != self.down_version:
++            self.source0 = self.source0.replace('%{version}', self.up_version)
++        self.source = '{name}_{version}.tar.gz'.format(name=self.name,
++            version=self.up_version)
+--- R2spec-4.1.0/r2spec/specfile.tpl.orig	2012-02-16 05:31:35.922565336 -0200
++++ R2spec-4.1.0/r2spec/specfile.tpl	2012-02-16 05:32:04.099685181 -0200
+@@ -2,27 +2,23 @@
+ {% if (arch == False) %}%global rlibdir  %{_datadir}/R/library
+ {% else %}%global rlibdir  %{_libdir}/R/library
+ {% endif %}
+-
+ Name:             R-%{packname}
+ Version:          {{version}}
+-Release:          1%{?dist}
++Release:          1
+ Summary:          {{summary}}
+-
+-Group:            Applications/Engineering 
++Group:            Sciences/Mathematics
+ License:          {{license}}
+ URL:              {{URL}}
+ Source0:          {{source0}}
+-BuildRoot:        %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+ {% if (arch == False) %}BuildArch:        noarch
+ Requires:         R-core
+ {% endif %}
+ {% if depends != "" %}Requires:         {{depends}} {% endif %}
+ {% if imports != "" %}Requires:         {{imports}} {% endif %}
+ {% if suggests != "" %}Requires:         {{suggests}} {% endif %}
+-BuildRequires:    R-devel tex(latex) {{depends}}
++BuildRequires:    R-devel Rmath-devel texlive-collection-latex {{depends}}
+ {% if imports != "" %}BuildRequires:    {{imports}} {% endif %}
+ {% if suggests != "" %}BuildRequires:   {{suggests}} {% endif %}
+-
+ %description
+ {{description}}
+ 
+@@ -32,7 +28,6 @@ BuildRequires:    R-devel tex(latex) {{d
+ %build
+ 
+ %install
+-rm -rf %{buildroot}
+ mkdir -p %{buildroot}%{rlibdir}
+ %{_bindir}/R CMD INSTALL -l %{buildroot}%{rlibdir} %{packname}
+ test -d %{packname}/src && (cd %{packname}/src; rm -f *.o *.so)
+@@ -41,11 +36,7 @@ rm -f %{buildroot}%{rlibdir}/R.css
+ %check
+ %{_bindir}/R CMD check %{packname}
+ {% endif %}
+-%clean
+-rm -rf %{buildroot}
+-
+ %files
+-%defattr(-, root, root, -)
+ %dir %{rlibdir}/%{packname}
+ %doc %{rlibdir}/%{packname}/doc
+ %doc %{rlibdir}/%{packname}/html
+@@ -57,7 +48,3 @@ rm -rf %{buildroot}
+ %{rlibdir}/%{packname}/R
+ %{rlibdir}/%{packname}/help
+ 
+-
+-%changelog
+-* {{date}} {{name}} <{{email}}> {{version}}-1
+-- initial package for Fedora
+--- R2spec-4.1.0/repos.cfg.orig	2012-02-16 05:31:46.234609164 -0200
++++ R2spec-4.1.0/repos.cfg	2012-02-16 05:32:38.793833134 -0200
+@@ -18,6 +18,11 @@ url = http://cran.r-project.org/web/pack
+ source = http://cran.r-project.org/src/contrib/%{packname}_%{version}.tar.gz
+ package = http://cran.r-project.org/src/contrib/PACKAGES
+ 
++[repo:cran-archive]
++url = http://cran.r-project.org/web/packages/%{packname}/index.html
++source = http://cran.r-project.org/src/contrib/Archive/%{packname}/%{packname}_%{version}.tar.gz
++package = http://cran.r-project.org/src/contrib/PACKAGES
++
+ [repo:r-forge]
+ url = https://r-forge.r-project.org/projects/%{packname}/index.html
+ source = https://r-forge.r-project.org/src/contrib/%{packname}_%{version}.tar.gz
