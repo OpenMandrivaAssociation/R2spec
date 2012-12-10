@@ -45,3 +45,22 @@ chmod -x %{buildroot}/%{py_puresitedir}/r2spec/specfile.tpl
 %{_bindir}/R2rpm
 %{_mandir}/man1/%{name}.1*
 %{_mandir}/man1/R2rpm.1*
+
+
+%changelog
+* Tue Feb 21 2012 Paulo Andrade <pcpa@mandriva.com.br> 4.1.0-3
++ Revision: 778359
+- Rebuild with latest Mandriva specific patches.
+- Add a new repository for the previously incorrectly used one.
+- Extra work on patching R2spec to require less human interaction.
+- Update Mandriva patch to work correctly with --repo=cran
+
+* Thu Feb 16 2012 Paulo Andrade <pcpa@mandriva.com.br> 4.1.0-2
++ Revision: 774621
+- Correct generated build requires.
+
+* Wed Feb 15 2012 Paulo Andrade <pcpa@mandriva.com.br> 4.1.0-1
++ Revision: 774548
+- Import R2spec
+- Import R2spec
+
